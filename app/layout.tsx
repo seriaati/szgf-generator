@@ -8,8 +8,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "SZGF Generator - ZZZ Guide Creator",
-  description: "Create standardized Zenless Zone Zero character guides in YAML format",
+  title: "SZGF Generator",
+  description: "Create SZGF-compliant guides in YAML format",
   generator: "v0.app",
   icons: {
     icon: [
