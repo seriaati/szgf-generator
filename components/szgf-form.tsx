@@ -54,6 +54,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
   const [driveDiscsList, setDriveDiscsList] = useState<DriveDisc[]>([])
   const [loadingDriveDiscs, setLoadingDriveDiscs] = useState(true)
   const [discComboOpen, setDiscComboOpen] = useState<{ [key: string]: boolean }>({})
+  const [teamCharComboOpen, setTeamCharComboOpen] = useState<{ [key: string]: boolean }>({})
 
   useEffect(() => {
     const fetchCharacters = async () => {
@@ -1193,45 +1194,162 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       <div className="space-y-2">
                         <Label>Characters ({team.characters?.length || 0})</Label>
                         {(team.characters || []).map((char: any, charIndex: number) => (
-                          <div key={charIndex} className="flex gap-2">
-                            <Input
-                              value={char.name}
-                              onChange={(e) => {
-                                const newData = { ...formData }
-                                newData.team.teams[index].characters[charIndex].name = e.target.value
-                                setFormData(newData)
-                              }}
-                              placeholder="Character name"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const newData = { ...formData }
-                                newData.team.teams[index].characters.splice(charIndex, 1)
-                                setFormData(newData)
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <Card key={charIndex} className="p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm">Position {charIndex + 1}</Label>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const newData = { ...formData }
+                                  newData.team.teams[index].characters.splice(charIndex, 1)
+                                  setFormData(newData)
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-muted-foreground">
+                                Selected ({(char.name || "").split(" / ").filter((n: string) => n.trim()).length}/3)
+                              </Label>
+                              <Popover
+                                open={teamCharComboOpen[`${index}-${charIndex}`]}
+                                onOpenChange={(open) =>
+                                  setTeamCharComboOpen({ ...teamCharComboOpen, [`${index}-${charIndex}`]: open })
+                                }
+                              >
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className="w-full justify-between"
+                                    disabled={loadingCharacters}
+                                  >
+                                    {loadingCharacters ? (
+                                      "Loading characters..."
+                                    ) : char.name ? (
+                                      <span className="flex items-center flex-wrap gap-1 truncate">
+                                        {char.name.split(" / ").map((name: string, idx: number) => {
+                                          const selectedChar = characters.find((c) => c.EN === name.trim())
+                                          const iconUrl = selectedChar?.icon
+                                            ? `https://api.hakush.in/zzz/UI/${selectedChar.icon.replace(
+                                                "IconRole",
+                                                "IconRoleCrop"
+                                              )}.webp`
+                                            : null
+                                          return (
+                                            <span key={idx} className="flex items-center">
+                                              {iconUrl && (
+                                                <img
+                                                  src={iconUrl}
+                                                  alt={selectedChar?.EN}
+                                                  className="mr-1 h-5 w-5 rounded-full object-cover"
+                                                  onError={(e) => {
+                                                    e.currentTarget.style.display = "none"
+                                                  }}
+                                                />
+                                              )}
+                                              {name.trim()}
+                                              {idx < char.name.split(" / ").length - 1 && <span className="mx-1">/</span>}
+                                            </span>
+                                          )
+                                        })}
+                                      </span>
+                                    ) : (
+                                      "Select characters (up to 3)..."
+                                    )}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-100 p-0">
+                                  <Command>
+                                    <CommandInput placeholder="Search character..." />
+                                    <CommandList>
+                                      <CommandEmpty>No character found.</CommandEmpty>
+                                      <CommandGroup>
+                                        {characters.map((character) => {
+                                          const iconUrl = character.icon
+                                            ? `https://api.hakush.in/zzz/UI/${character.icon.replace(
+                                                "IconRole",
+                                                "IconRoleCrop"
+                                              )}.webp`
+                                            : null
+                                          const selectedNames = (char.name || "")
+                                            .split(" / ")
+                                            .map((n: string) => n.trim())
+                                            .filter((n: string) => n)
+                                          const isSelected = selectedNames.includes(character.EN)
+                                          const canSelect = selectedNames.length < 3 || isSelected
+                                          return (
+                                            <CommandItem
+                                              key={character.code}
+                                              value={character.EN}
+                                              disabled={!canSelect}
+                                              onSelect={() => {
+                                                if (!canSelect && !isSelected) return
+                                                const newData = { ...formData }
+                                                let newNames = [...selectedNames]
+                                                if (isSelected) {
+                                                  // Remove character
+                                                  newNames = newNames.filter((n) => n !== character.EN)
+                                                } else {
+                                                  // Add character
+                                                  newNames.push(character.EN)
+                                                }
+                                                newData.team.teams[index].characters[charIndex].name =
+                                                  newNames.join(" / ")
+                                                setFormData(newData)
+                                              }}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  isSelected ? "opacity-100" : "opacity-0"
+                                                )}
+                                              />
+                                              {iconUrl && (
+                                                <img
+                                                  src={iconUrl}
+                                                  alt={character.EN}
+                                                  className="mr-2 h-8 w-8 rounded-full object-cover"
+                                                  onError={(e) => {
+                                                    e.currentTarget.style.display = "none"
+                                                  }}
+                                                />
+                                              )}
+                                              <span className={!canSelect && !isSelected ? "opacity-50" : ""}>
+                                                {character.EN} ({character.rank === 3 ? "A" : "S"}-rank)
+                                              </span>
+                                            </CommandItem>
+                                          )
+                                        })}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </Card>
                         ))}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full bg-transparent"
-                          onClick={() => {
-                            const newData = { ...formData }
-                            if (!newData.team.teams[index].characters) {
-                              newData.team.teams[index].characters = []
-                            }
-                            newData.team.teams[index].characters.push({ name: "" })
-                            setFormData(newData)
-                          }}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Character
-                        </Button>
+                        {(team.characters?.length || 0) < 3 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full bg-transparent"
+                            onClick={() => {
+                              const newData = { ...formData }
+                              if (!newData.team.teams[index].characters) {
+                                newData.team.teams[index].characters = []
+                              }
+                              newData.team.teams[index].characters.push({ name: "" })
+                              setFormData(newData)
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Character Position
+                          </Button>
+                        )}
                       </div>
                     </Card>
                   ))}
