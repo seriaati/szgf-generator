@@ -46,7 +46,7 @@ export function Header({ formData, setFormData }: HeaderProps) {
       quotingType: '"',
     })
 
-    return `# yaml-language-server: $schema=../../schema.json\n${yamlContent}`
+    return `# yaml-language-server: $schema=../../schema.json\n\n${yamlContent}`
   }
 
   const handleDownload = () => {
