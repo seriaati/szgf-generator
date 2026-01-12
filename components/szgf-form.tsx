@@ -547,7 +547,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
             {formData.skill_priority && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="skill-priority-desc">Description *</Label>
+                  <Label htmlFor="skill-priority-desc">Description</Label>
                   <Textarea
                     id="skill-priority-desc"
                     value={formData.skill_priority.description}
