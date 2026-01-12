@@ -418,27 +418,26 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                   <h4 className="font-medium">Main Stats ({mainStats.length})</h4>
                   {mainStats.map((stat: any, index: number) => (
                     <Card key={index} className="p-4 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h5 className="text-sm font-medium">Position {stat.pos || index + 4}</h5>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2 flex-1">
+                          <Label>Position (4, 5, or 6) *</Label>
+                          <Select
+                            value={String(stat.pos)}
+                            onValueChange={(value) => updateArrayItem("stat.main_stats", index, "pos", Number(value))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="4">Position 4</SelectItem>
+                              <SelectItem value="5">Position 5</SelectItem>
+                              <SelectItem value="6">Position 6</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         <Button variant="ghost" size="sm" onClick={() => removeArrayItem("stat.main_stats", index)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Position (4, 5, or 6) *</Label>
-                        <Select
-                          value={String(stat.pos)}
-                          onValueChange={(value) => updateArrayItem("stat.main_stats", index, "pos", Number(value))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="4">Position 4</SelectItem>
-                            <SelectItem value="5">Position 5</SelectItem>
-                            <SelectItem value="6">Position 6</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label>Stat Priority *</Label>
