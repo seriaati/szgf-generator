@@ -40,11 +40,13 @@ export function Header({ formData, setFormData }: HeaderProps) {
       }),
     )
 
-    return yaml.dump(cleanData, {
+    const yamlContent = yaml.dump(cleanData, {
       lineWidth: -1,
       noRefs: true,
       quotingType: '"',
     })
+
+    return `# yaml-language-server: $schema=../../schema.json\n${yamlContent}`
   }
 
   const handleDownload = () => {

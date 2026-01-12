@@ -681,7 +681,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                     const selectedSets = disc.name.split(" / ")
                                     const selectedDiscs = selectedSets
                                       .map((name: string) => driveDiscsList.find((d: DriveDisc) => d.EN.name === name))
-                                      .filter((d): d is DriveDisc => d !== undefined)
+                                      .filter((d: DriveDisc | undefined): d is DriveDisc => d !== undefined)
 
                                     let iconUrl = null
                                     if (selectedDiscs.length === 2) {
