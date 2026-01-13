@@ -15,6 +15,7 @@ interface YAMLDrawerProps {
 
 export function YAMLDrawer({ formData, setFormData }: YAMLDrawerProps) {
   const [open, setOpen] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   return (
     <>
@@ -35,11 +36,16 @@ export function YAMLDrawer({ formData, setFormData }: YAMLDrawerProps) {
           </SheetHeader>
 
           <div className="border-b border-border">
-            <YAMLActions formData={formData} setFormData={setFormData} isMobile={true} />
+            <YAMLActions
+              formData={formData}
+              setFormData={setFormData}
+              isMobile={true}
+              onValidationChange={setValidationErrors}
+            />
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            <YAMLPreview formData={formData} showHeader={false} />
+            <YAMLPreview formData={formData} showHeader={false} validationErrors={validationErrors} />
           </div>
         </SheetContent>
       </Sheet>

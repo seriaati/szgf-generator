@@ -355,12 +355,12 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
 
         {/* Weapons */}
         <AccordionItem value="weapons">
-          <AccordionTrigger className="text-lg font-semibold">Weapons ({weapons.length})</AccordionTrigger>
+          <AccordionTrigger className="text-lg font-semibold">W-Engines ({weapons.length})</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
             {weapons.map((weapon: any, index: number) => (
               <Card key={index} className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-medium">Weapon {index + 1}</h4>
+                  <h4 className="font-medium">W-Engine {index + 1}</h4>
                   <Button variant="ghost" size="sm" onClick={() => removeArrayItem("weapons", index)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -487,7 +487,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
               onClick={() => addArrayItem("weapons", { name: "", description: "", title: null, icon: null })}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Weapon
+              Add W-Engine
             </Button>
           </AccordionContent>
         </AccordionItem>

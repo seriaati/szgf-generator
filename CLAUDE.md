@@ -45,13 +45,17 @@ page.tsx (state holder)
 
 ### YAML Generation
 
-The YAML generation logic in [components/header.tsx:32-48](components/header.tsx#L32-L48) performs two key steps:
+The YAML generation logic in [components/yaml-actions.tsx:32-50](components/yaml-actions.tsx#L32-L50) performs two key steps:
 
 1. **Cleaning**: Removes `null`, empty strings, and empty arrays using `JSON.stringify` replacer
+   - `null` → `undefined` → omitted from YAML output
+   - Empty strings `""` → `undefined` → omitted
+   - Empty arrays `[]` → `undefined` → omitted
 2. **Serialization**: Uses `js-yaml` library with these options:
    - `lineWidth: -1` - No line wrapping
    - `noRefs: true` - No YAML references
    - `quotingType: '"'` - Use double quotes
+   - Adds `# yaml-language-server: $schema=../../schema.json` comment at top
 
 ### Form Structure
 
@@ -99,6 +103,7 @@ lib/
 - **TypeScript** - Strict mode enabled in [tsconfig.json](tsconfig.json)
 - **Tailwind CSS v4** - Latest with PostCSS plugin, custom purple gaming theme
 - **js-yaml 4.1.1** - YAML parsing and generation
+- **ajv 8.17.1** - JSON Schema validator for real-time SZGF validation
 - **Radix UI** - Accessible component primitives (30+ packages)
 - **shadcn/ui** - Pre-built components using Radix + Tailwind
 - **Lucide React** - Icon library
@@ -123,7 +128,60 @@ The **Standardized ZZZ Guide Format** is a YAML structure with these fields:
 - `team` - Team compositions with multiple teams and characters
 - `rotation` - Skill rotation guide
 
-All optional sections can be toggled on/off in the UI, represented as `null` when disabled.
+### Optional Sections Pattern
+
+Optional sections follow a strict pattern per SZGF Pydantic schema requirements:
+
+1. **Initialization**: Optional sections start as `null` in formData
+2. **Enabling**: When user adds the section, it's initialized with a valid template object containing required nested fields
+3. **Disabling**: When user removes the section, it's set back to `null`
+4. **YAML Output**: During generation, `null` values are converted to `undefined` and omitted from the output
+
+**Critical Rule**: Empty objects `{}` are **not valid** for `discs`, `stat`, or `skill_priority`. These keys must **only appear in YAML when they contain properly filled required fields**. The Pydantic schema enforces:
+
+- `discs` requires `four_pieces` and `two_pieces` arrays
+- `stat` requires `main_stats`, `sub_stats`, and `baseline_stats`
+- `skill_priority` requires `priorities` array
+
+This is why the current `null` → `undefined` → omit pattern is correct.
+
+## YAML Validation
+
+The generator includes **real-time JSON Schema validation** against the official SZGF schema:
+
+### Features
+
+- **Live Validation**: Automatic validation on every form change (when basic fields are filled)
+- **Schema-Based**: Uses `ajv` library with the official SZGF JSON schema from GitHub
+- **Visual Feedback**: Error count displayed in header with console details
+- **Manual Validation**: "Validate" button for explicit validation checks
+- **Export Protection**: Download and Copy actions blocked when validation fails
+
+### Implementation Details
+
+**Schema Loading** ([components/yaml-actions.tsx:24-29](components/yaml-actions.tsx#L24-L29)):
+
+- Fetches schema from `https://raw.githubusercontent.com/seriaati/zzz-guides/refs/heads/main/schema.json` on mount
+- Stores in component state for validation
+
+**Validation Process** ([components/yaml-actions.tsx:38-68](components/yaml-actions.tsx#L38-L68)):
+
+1. Basic validation for required fields (author, last_updated, description, character)
+2. JSON Schema validation using `ajv` with cleaned data (same cleaning as YAML generation)
+3. Returns `null` if valid, or array of error strings if invalid
+4. Updates `validationErrors` state for UI display
+
+**Live Validation** ([components/yaml-actions.tsx:32-36](components/yaml-actions.tsx#L32-L36)):
+
+- `useEffect` hook watches `formData` and `schema` changes
+- Runs validation automatically when data changes (if basic fields are valid)
+- Updates error state in real-time
+
+**UI Feedback**:
+
+- Desktop: Small error banner below action buttons showing error count
+- Mobile: Expanded error list showing first 3 errors with overflow indicator
+- Console: Full error details logged for debugging
 
 ## Important Notes
 
@@ -144,11 +202,11 @@ All optional sections can be toggled on/off in the UI, represented as `null` whe
 
 ### Modifying YAML Output
 
-Edit the `generateYAML()` function in [components/header.tsx](components/header.tsx) to adjust cleaning logic or `js-yaml` options.
+Edit the `generateYAML()` function in [components/yaml-actions.tsx](components/yaml-actions.tsx) to adjust cleaning logic or `js-yaml` options.
 
 ### Adding New Optional Sections
 
-1. Initialize as `null` in formData
-2. Add checkbox to enable/disable the section
-3. Set to `null` when disabled (it will be stripped from YAML output)
-4. Use template objects when enabling (e.g., `{ four_pieces: [], two_pieces: [] }`)
+1. Initialize as `null` in formData ([app/page.tsx](app/page.tsx))
+2. Add "Add Section" button in form that sets it to a valid template object with required fields
+3. Add "Remove Section" button that sets it back to `null` (will be stripped from YAML output)
+4. Template objects must include all required nested fields per Pydantic schema (e.g., `{ four_pieces: [], two_pieces: [], extra_sections: [] }` for discs)
