@@ -5,9 +5,10 @@ import { useEffect, useState } from "react"
 
 interface YAMLPreviewProps {
   formData: any
+  showHeader?: boolean
 }
 
-export function YAMLPreview({ formData }: YAMLPreviewProps) {
+export function YAMLPreview({ formData, showHeader = true }: YAMLPreviewProps) {
   const [yamlContent, setYamlContent] = useState("")
 
   useEffect(() => {
@@ -35,10 +36,12 @@ export function YAMLPreview({ formData }: YAMLPreviewProps) {
 
   return (
     <div className="h-full bg-muted/30">
-      <div className="sticky top-0 bg-card border-b border-border px-6 py-4 z-10">
-        <h2 className="text-lg font-semibold">YAML Preview</h2>
-        <p className="text-sm text-muted-foreground">Live preview of your SZGF file</p>
-      </div>
+      {showHeader && (
+        <div className="sticky top-0 bg-card border-b border-border px-6 py-4 z-10">
+          <h2 className="text-lg font-semibold">YAML Preview</h2>
+          <p className="text-sm text-muted-foreground">Live preview of your SZGF file</p>
+        </div>
+      )}
       <div className="p-6">
         <pre className="font-mono text-sm bg-card rounded-lg p-4 overflow-x-auto border border-border">
           <code>{yamlContent}</code>
