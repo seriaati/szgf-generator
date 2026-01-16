@@ -129,7 +129,11 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `${formData.character.name || "guide"}.yml`
+    const filename = (formData.character.name || "guide")
+      .toLowerCase()
+      .replace(/['"]/g, "")
+      .replace(/\s+/g, "-")
+    a.download = `${filename}.yml`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
