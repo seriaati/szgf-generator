@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/rich-text-editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Check, ChevronsUpDown } from "lucide-react"
@@ -219,10 +219,10 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description *</Label>
-              <Textarea
+              <RichTextEditor
                 id="description"
                 value={formData.description}
-                onChange={(e) => updateField("description", e.target.value)}
+                onChange={(value) => updateField("description", value)}
                 placeholder="Describe the purpose and content of this guide..."
                 rows={8}
               />
@@ -455,9 +455,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Description *</Label>
-                  <Textarea
+                  <RichTextEditor
                     value={weapon.description}
-                    onChange={(e) => updateArrayItem("weapons", index, "description", e.target.value)}
+                    onChange={(value) => updateArrayItem("weapons", index, "description", value)}
                     placeholder="Why this weapon is recommended..."
                     rows={6}
                   />
@@ -619,9 +619,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Description *</Label>
-                        <Textarea
+                        <RichTextEditor
                           value={disc.description}
-                          onChange={(e) => updateArrayItem("discs.four_pieces", index, "description", e.target.value)}
+                          onChange={(value) => updateArrayItem("discs.four_pieces", index, "description", value)}
                           placeholder="Why this set is recommended..."
                           rows={5}
                         />
@@ -775,9 +775,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Description *</Label>
-                        <Textarea
+                        <RichTextEditor
                           value={disc.description}
-                          onChange={(e) => updateArrayItem("discs.two_pieces", index, "description", e.target.value)}
+                          onChange={(value) => updateArrayItem("discs.two_pieces", index, "description", value)}
                           placeholder="Why this set is recommended..."
                           rows={5}
                         />
@@ -828,10 +828,10 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Description *</Label>
-                        <Textarea
+                        <RichTextEditor
                           value={section.description}
-                          onChange={(e) =>
-                            updateArrayItem("discs.extra_sections", index, "description", e.target.value)
+                          onChange={(value) =>
+                            updateArrayItem("discs.extra_sections", index, "description", value)
                           }
                           placeholder="Additional information..."
                           rows={5}
@@ -933,10 +933,10 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="baseline-stats">Baseline Stats *</Label>
-                  <Textarea
+                  <RichTextEditor
                     id="baseline-stats"
                     value={formData.stat.baseline_stats}
-                    onChange={(e) => updateField("stat.baseline_stats", e.target.value)}
+                    onChange={(value) => updateField("stat.baseline_stats", value)}
                     placeholder="e.g., ATK: 2800+, CRIT RATE: 60%+, CRIT DMG: 120%+"
                     rows={6}
                   />
@@ -962,9 +962,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Description *</Label>
-                        <Textarea
+                        <RichTextEditor
                           value={section.description}
-                          onChange={(e) => updateArrayItem("stat.extra_sections", index, "description", e.target.value)}
+                          onChange={(value) => updateArrayItem("stat.extra_sections", index, "description", value)}
                           placeholder="Additional information..."
                           rows={5}
                         />
@@ -1009,10 +1009,10 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
               <>
                 <div className="space-y-2">
                   <Label htmlFor="skill-priority-desc">Description</Label>
-                  <Textarea
+                  <RichTextEditor
                     id="skill-priority-desc"
                     value={formData.skill_priority.description}
-                    onChange={(e) => updateField("skill_priority.description", e.target.value)}
+                    onChange={(value) => updateField("skill_priority.description", value)}
                     placeholder="Explain the skill priority..."
                     rows={6}
                   />
@@ -1112,18 +1112,18 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Description *</Label>
-                  <Textarea
+                  <RichTextEditor
                     value={skill.description}
-                    onChange={(e) => updateArrayItem("skills", index, "description", e.target.value)}
-                    placeholder="What the skill does... Use <basic>, <dodge>, <chain>, <special>, <assist>, <core> for button icons"
+                    onChange={(value) => updateArrayItem("skills", index, "description", value)}
+                    placeholder="What the skill does..."
                     rows={6}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Explanation *</Label>
-                  <Textarea
+                  <RichTextEditor
                     value={skill.explanation}
-                    onChange={(e) => updateArrayItem("skills", index, "explanation", e.target.value)}
+                    onChange={(value) => updateArrayItem("skills", index, "explanation", value)}
                     placeholder="How to use this skill effectively..."
                     rows={6}
                   />
@@ -1184,9 +1184,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Description (optional)</Label>
-                        <Textarea
+                        <RichTextEditor
                           value={team.description || ""}
-                          onChange={(e) => updateArrayItem("team.teams", index, "description", e.target.value || null)}
+                          onChange={(value) => updateArrayItem("team.teams", index, "description", value || null)}
                           placeholder="Team strategy and synergy..."
                           rows={5}
                         />
@@ -1384,9 +1384,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Description *</Label>
-                        <Textarea
+                        <RichTextEditor
                           value={section.description}
-                          onChange={(e) => updateArrayItem("team.extra_sections", index, "description", e.target.value)}
+                          onChange={(value) => updateArrayItem("team.extra_sections", index, "description", value)}
                           placeholder="Additional information..."
                           rows={5}
                         />
@@ -1440,10 +1440,10 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="rotation-desc">Description *</Label>
-                  <Textarea
+                  <RichTextEditor
                     id="rotation-desc"
                     value={formData.rotation.description}
-                    onChange={(e) => updateField("rotation.description", e.target.value)}
+                    onChange={(value) => updateField("rotation.description", value)}
                     placeholder="Explain the skill rotation and combos..."
                     rows={10}
                   />
@@ -1493,9 +1493,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Description *</Label>
-                  <Textarea
+                  <RichTextEditor
                     value={mindscape.description}
-                    onChange={(e) => updateArrayItem("mindscapes", index, "description", e.target.value)}
+                    onChange={(value) => updateArrayItem("mindscapes", index, "description", value)}
                     placeholder="What this mindscape does and its importance..."
                     rows={3}
                   />
