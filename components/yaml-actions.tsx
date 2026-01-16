@@ -2,7 +2,16 @@
 
 import type React from "react"
 import { Button } from "@/components/ui/button"
-import { Download, Copy, Upload, FileUp, Trash2 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Download, Copy, Upload, FileUp, Trash2, MessageCircle, Github } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import * as yaml from "js-yaml"
 import { useRef, useState, useEffect } from "react"
@@ -20,6 +29,9 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [schema, setSchema] = useState<any>(null)
+  const [pasteDialogOpen, setPasteDialogOpen] = useState(false)
+  const [pasteContent, setPasteContent] = useState("")
+  const [nextStepsDialogOpen, setNextStepsDialogOpen] = useState(false)
 
   // Notify parent of validation changes
   useEffect(() => {
@@ -142,6 +154,7 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
       title: "Downloaded",
       description: "YAML file downloaded successfully",
     })
+    setNextStepsDialogOpen(true)
   }
 
   const handleCopy = async () => {
@@ -162,6 +175,7 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
       title: "Copied",
       description: "YAML content copied to clipboard",
     })
+    setNextStepsDialogOpen(true)
   }
 
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,49 +204,27 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
   }
 
   const handlePasteYAML = () => {
-    const dialog = document.createElement("dialog")
-    dialog.className = "rounded-lg p-6 max-w-2xl w-full backdrop:bg-black/50"
-    dialog.innerHTML = `
-      <div class="space-y-4">
-        <h2 class="text-lg font-semibold text-foreground">Paste YAML Content</h2>
-        <textarea id="yaml-paste-area" class="w-full h-64 p-3 border border-input rounded-lg font-mono text-sm bg-background text-foreground" placeholder="Paste your YAML content here..."></textarea>
-        <div class="flex gap-2 justify-end">
-          <button id="cancel-paste" class="px-4 py-2 rounded-lg border border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground">Cancel</button>
-          <button id="confirm-paste" class="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">Import</button>
-        </div>
-      </div>
-    `
-    document.body.appendChild(dialog)
-    dialog.showModal()
+    setPasteContent("")
+    setPasteDialogOpen(true)
+  }
 
-    const textarea = dialog.querySelector("#yaml-paste-area") as HTMLTextAreaElement
-    const cancelBtn = dialog.querySelector("#cancel-paste")
-    const confirmBtn = dialog.querySelector("#confirm-paste")
-
-    cancelBtn?.addEventListener("click", () => {
-      dialog.close()
-      document.body.removeChild(dialog)
-    })
-
-    confirmBtn?.addEventListener("click", () => {
-      try {
-        const content = textarea.value
-        const parsed = yaml.load(content) as any
-        setFormData(parsed)
-        toast({
-          title: "Imported",
-          description: "YAML content imported successfully",
-        })
-        dialog.close()
-        document.body.removeChild(dialog)
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to parse YAML content",
-          variant: "destructive",
-        })
-      }
-    })
+  const handleConfirmPaste = () => {
+    try {
+      const parsed = yaml.load(pasteContent) as any
+      setFormData(parsed)
+      toast({
+        title: "Imported",
+        description: "YAML content imported successfully",
+      })
+      setPasteDialogOpen(false)
+      setPasteContent("")
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to parse YAML content",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleClearForm = () => {
@@ -262,6 +254,54 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
     }
   }
 
+  const nextStepsDialog = (
+    <Dialog open={nextStepsDialogOpen} onOpenChange={setNextStepsDialogOpen}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>What's Next?</DialogTitle>
+          <DialogDescription>
+            Choose how you'd like to submit your guide.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="rounded-lg border p-4 space-y-2">
+            <div className="flex items-center gap-2 font-medium">
+              <MessageCircle className="h-5 w-5" />
+              Submit via Discord
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Join the Discord server and submit your guide in the #submit-guides channel.
+            </p>
+            <Button asChild variant="outline" size="sm" className="w-full">
+              <a href="https://link.seria.moe/hb-dc" target="_blank" rel="noopener noreferrer">
+                Join Discord Server
+              </a>
+            </Button>
+          </div>
+          <div className="rounded-lg border p-4 space-y-2">
+            <div className="flex items-center gap-2 font-medium">
+              <Github className="h-5 w-5" />
+              Submit via GitHub
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Open an issue or create a pull request for direct attribution.
+            </p>
+            <Button asChild variant="outline" size="sm" className="w-full">
+              <a href="https://github.com/seriaati/zzz-guides" target="_blank" rel="noopener noreferrer">
+                Open GitHub Repository
+              </a>
+            </Button>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => setNextStepsDialogOpen(false)}>
+            Done
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+
   if (isMobile) {
     return (
       <>
@@ -288,6 +328,28 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
           </Button>
         </div>
         <input ref={fileInputRef} type="file" accept=".yml,.yaml" className="hidden" onChange={handleImportFile} />
+        <Dialog open={pasteDialogOpen} onOpenChange={setPasteDialogOpen}>
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Paste YAML Content</DialogTitle>
+            </DialogHeader>
+            <Textarea
+              value={pasteContent}
+              onChange={(e) => setPasteContent(e.target.value)}
+              placeholder="Paste your YAML content here..."
+              className="h-64 font-mono text-sm"
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPasteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmPaste}>
+                Import
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {nextStepsDialog}
       </>
     )
   }
@@ -317,6 +379,28 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
         </Button>
       </div>
       <input ref={fileInputRef} type="file" accept=".yml,.yaml" className="hidden" onChange={handleImportFile} />
+      <Dialog open={pasteDialogOpen} onOpenChange={setPasteDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Paste YAML Content</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={pasteContent}
+            onChange={(e) => setPasteContent(e.target.value)}
+            placeholder="Paste your YAML content here..."
+            className="h-64 font-mono text-sm"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmPaste}>
+              Import
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {nextStepsDialog}
     </>
   )
 }
