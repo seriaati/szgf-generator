@@ -1463,7 +1463,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
 
         {/* Mindscapes */}
         <AccordionItem value="mindscapes">
-          <AccordionTrigger className="text-lg font-semibold">Mindscapes ({mindscapes.length})</AccordionTrigger>
+          <AccordionTrigger className="text-lg font-semibold">Mindscape Cinemas ({mindscapes.length})</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
             {mindscapes.map((mindscape: any, index: number) => (
               <Card key={index} className="p-4 space-y-4">
