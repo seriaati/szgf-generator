@@ -3,6 +3,7 @@
 import { YAMLActions } from "@/components/yaml-actions"
 import { Toaster } from "@/components/ui/toaster"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { ExternalLink } from "lucide-react"
 
 interface HeaderProps {
@@ -22,7 +23,7 @@ export function Header({ formData, setFormData, isMobile = false, onValidationCh
               <h1 className="text-xl md:text-2xl font-bold text-foreground">SZGF Generator</h1>
               <p className="text-xs md:text-sm text-muted-foreground">Standardized ZZZ Guide Format</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
               <Button
                 variant="outline"
                 size="sm"
@@ -43,6 +44,7 @@ export function Header({ formData, setFormData, isMobile = false, onValidationCh
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </Button>
+              <ThemeToggle />
             </div>
           </div>
           {!isMobile && (
