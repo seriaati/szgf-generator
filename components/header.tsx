@@ -39,8 +39,28 @@ export function Header({ formData, setFormData, isMobile = false, onValidationCh
                 size="sm"
                 asChild
               >
+                <a href="https://szgf.seria.moe" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                  <span>Website</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
                 <a href="https://github.com/seriaati/szgf" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
                   <span>GitHub</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+              >
+                <a href="https://docs.szgf.seria.moe" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                  <span>Documentation</span>
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </Button>
