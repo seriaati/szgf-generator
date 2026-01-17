@@ -542,7 +542,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                   {(() => {
                                     const selectedDisc = driveDiscsList.find((d) => d.EN.name === disc.name)
                                     const iconUrl = selectedDisc?.id
-                                      ? `https://raw.githubusercontent.com/seriaati/zzz-guides/refs/heads/main/assets/drive_discs/single/${selectedDisc.id}.webp`
+                                      ? `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/assets/drive_discs/single/${selectedDisc.id}.webp`
                                       : null
                                     return (
                                       <>
@@ -575,7 +575,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                 <CommandGroup>
                                   {driveDiscsList.map((d, dIndex) => {
                                     const iconUrl = d.id
-                                      ? `https://raw.githubusercontent.com/seriaati/zzz-guides/refs/heads/main/assets/drive_discs/single/${d.id}.webp`
+                                      ? `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/assets/drive_discs/single/${d.id}.webp`
                                       : null
                                     return (
                                       <CommandItem
@@ -688,10 +688,10 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                     if (selectedDiscs.length === 2) {
                                       // Combined icon for two sets
                                       const ids = selectedDiscs.map((d: DriveDisc) => d.id).sort()
-                                      iconUrl = `https://raw.githubusercontent.com/seriaati/zzz-guides/refs/heads/main/assets/drive_discs/combined/${ids[0]}_${ids[1]}.webp`
+                                      iconUrl = `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/assets/drive_discs/combined/${ids[0]}_${ids[1]}.webp`
                                     } else if (selectedDiscs.length === 1) {
                                       // Single icon
-                                      iconUrl = `https://raw.githubusercontent.com/seriaati/zzz-guides/refs/heads/main/assets/drive_discs/single/${selectedDiscs[0].id}.webp`
+                                      iconUrl = `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/assets/drive_discs/single/${selectedDiscs[0].id}.webp`
                                     }
 
                                     return (
@@ -727,7 +727,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                     const selectedSets = disc.name ? disc.name.split(" / ") : []
                                     const isSelected = selectedSets.includes(d.EN.name)
                                     const iconUrl = d.id
-                                      ? `https://raw.githubusercontent.com/seriaati/zzz-guides/refs/heads/main/assets/drive_discs/single/${d.id}.webp`
+                                      ? `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/assets/drive_discs/single/${d.id}.webp`
                                       : null
                                     return (
                                       <CommandItem

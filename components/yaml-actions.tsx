@@ -40,7 +40,7 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
 
   // Fetch schema on mount
   useEffect(() => {
-    fetch("https://raw.githubusercontent.com/seriaati/zzz-guides/refs/heads/main/schema.json")
+    fetch("https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/schema.json")
       .then((res) => res.json())
       .then((data) => setSchema(data))
       .catch((err) => console.error("Failed to fetch schema:", err))
@@ -287,7 +287,7 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
               Open an issue or create a pull request for direct attribution.
             </p>
             <Button asChild variant="outline" size="sm" className="w-full">
-              <a href="https://github.com/seriaati/zzz-guides" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/seriaati/szgf" target="_blank" rel="noopener noreferrer">
                 Open GitHub Repository
               </a>
             </Button>

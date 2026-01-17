@@ -161,7 +161,7 @@ The generator includes **real-time JSON Schema validation** against the official
 
 **Schema Loading** ([components/yaml-actions.tsx:24-29](components/yaml-actions.tsx#L24-L29)):
 
-- Fetches schema from `https://raw.githubusercontent.com/seriaati/zzz-guides/refs/heads/main/schema.json` on mount
+- Fetches schema from `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/schema.json` on mount
 - Stores in component state for validation
 
 **Validation Process** ([components/yaml-actions.tsx:38-68](components/yaml-actions.tsx#L38-L68)):

@@ -39,7 +39,7 @@ export function Header({ formData, setFormData, isMobile = false, onValidationCh
                 size="sm"
                 asChild
               >
-                <a href="https://github.com/seriaati/zzz-guides" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
+                <a href="https://github.com/seriaati/szgf" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
                   <span>GitHub</span>
                   <ExternalLink className="h-3 w-3" />
                 </a>
