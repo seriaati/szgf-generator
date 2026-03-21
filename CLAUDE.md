@@ -29,6 +29,7 @@ npm run lint
 **Single Source of Truth**: All form state lives in [app/page.tsx:9-26](app/page.tsx#L9-L26) as a single `formData` object managed by `useState`.
 
 **State Updates**: The form uses **immutable updates with path-based field access**:
+
 - `updateField(path, value)` - Updates nested fields using dot notation (e.g., `"character.name"`)
 - `addArrayItem(path, template)` - Appends to arrays with a template object
 - `removeArrayItem(path, index)` - Removes from arrays by index
@@ -77,7 +78,7 @@ updateArrayItem("weapons", 0, "description", "Best weapon for Nicole")
 
 ```
 app/
-  ├─ layout.tsx          - Root layout with metadata, theme provider, Analytics
+  ├─ layout.tsx          - Root layout with metadata and theme provider
   ├─ page.tsx           - Main page with state management and layout
   └─ globals.css        - Tailwind imports + CSS variables for theming
 
@@ -113,6 +114,7 @@ lib/
 The **Standardized ZZZ Guide Format** is a YAML structure with these fields:
 
 **Required**:
+
 - `author` - Guide author name
 - `last_updated` - ISO date string
 - `description` - Multi-line guide overview
@@ -122,6 +124,7 @@ The **Standardized ZZZ Guide Format** is a YAML structure with these fields:
 - `mindscapes` - Array of M1-M6 descriptions
 
 **Optional**:
+
 - `discs` - Drive disc configurations (four_pieces, two_pieces, extra_sections)
 - `stat` - Stat priorities (main_stats by position, sub_stats, baseline, extra_sections)
 - `skill_priority` - Upgrade priorities with optional descriptions

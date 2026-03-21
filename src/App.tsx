@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Analytics } from "@vercel/analytics/react"
 import { Header } from "@/components/header"
 import { SZGFForm } from "@/components/szgf-form"
 import { YAMLPreview } from "@/components/yaml-preview"
@@ -31,7 +30,6 @@ export default function App() {
                 )}
             </div>
             {isMobile && <YAMLDrawer formData={formData} setFormData={setFormData} />}
-            <Analytics />
         </div>
     )
 }
