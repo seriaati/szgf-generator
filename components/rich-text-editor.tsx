@@ -4,16 +4,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Bold, Italic, Underline, Strikethrough } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, getAssetURL } from "@/lib/utils"
 
 // Skill icon tags with their images
 const skillTags = [
-  { name: "Basic Attack", tag: "<basic>", icon: "https://api.hakush.in/zzz/UI/Icon_Normal.webp" },
-  { name: "Dodge", tag: "<dodge>", icon: "https://api.hakush.in/zzz/UI/Icon_Evade.webp" },
-  { name: "Chain", tag: "<chain>", icon: "https://api.hakush.in/zzz/UI/Icon_UltimateReady.webp" },
-  { name: "Special", tag: "<special>", icon: "https://api.hakush.in/zzz/UI/Icon_SpecialReady.webp" },
-  { name: "Assist", tag: "<assist>", icon: "https://api.hakush.in/zzz/UI/Icon_Switch.webp" },
-  { name: "Core Skill", tag: "<core>", icon: "https://api.hakush.in/zzz/UI/Icon_CoreSkill.webp" },
+  { name: "Basic Attack", tag: "<basic>", icon: getAssetURL("Icon_Normal.webp") },
+  { name: "Dodge", tag: "<dodge>", icon: getAssetURL("Icon_Evade.webp") },
+  { name: "Chain", tag: "<chain>", icon: getAssetURL("Icon_UltimateReady.webp") },
+  { name: "Special", tag: "<special>", icon: getAssetURL("IconRoleSkillKeySpecialV2.webp") },
+  { name: "Assist", tag: "<assist>", icon: getAssetURL("Icon_Switch.webp") },
+  { name: "Core Skill", tag: "<core>", icon: getAssetURL("Icon_CoreSkill.webp") },
 ] as const
 
 // Markdown formatting options

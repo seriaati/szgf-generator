@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { cn } from "@/lib/utils"
+import { cn, getZZZVersion, getStaticNanokaURL, getAssetURL } from "@/lib/utils"
 import type {
   DiscItem,
   ExtraSection,
@@ -25,15 +25,16 @@ import type {
 import type { Dispatch, SetStateAction } from "react"
 
 interface Character {
+  id: string
   code: string
-  EN: string
+  en: string
   rank: number
   icon: string
   camp: number
 }
 
 interface Weapon {
-  EN: string
+  en: string
   rank: number
   type: number
   icon: string
@@ -41,7 +42,7 @@ interface Weapon {
 
 interface DriveDisc {
   id: string
-  EN: {
+  en: {
     name: string
     desc2: string
     desc4: string
@@ -55,6 +56,7 @@ interface SZGFFormProps {
 }
 
 export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
+  const [version, setVersion] = useState<string | null>(null)
   const [characters, setCharacters] = useState<Character[]>([])
   const [loadingCharacters, setLoadingCharacters] = useState(true)
   const [characterComboOpen, setCharacterComboOpen] = useState(false)
@@ -66,15 +68,45 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
   const [discComboOpen, setDiscComboOpen] = useState<{ [key: string]: boolean }>({})
   const [teamCharComboOpen, setTeamCharComboOpen] = useState<{ [key: string]: boolean }>({})
 
+  const getCharacterIconUrl = (characterId: string) =>
+    `https://zzz.honeyhunterworld.com/img/character/${characterId}-char_icon.webp`
+
   useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const v = await getZZZVersion()
+        setVersion(v)
+      } catch (error) {
+        console.error("Failed to fetch version:", error)
+        // Reset loading states on version fetch failure
+        setLoadingCharacters(false)
+        setLoadingWeapons(false)
+        setLoadingDriveDiscs(false)
+      }
+    }
+
+    fetchVersion()
+  }, [])
+
+  useEffect(() => {
+    if (!version) return
+
     const fetchCharacters = async () => {
       try {
-        const response = await fetch("https://api.hakush.in/zzz/data/character.json")
+        const url = getStaticNanokaURL("character.json", version)
+        console.log('Fetching characters from:', url)
+        const response = await fetch(url)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+        }
         const data = await response.json()
-        // Convert object to array of characters
-        const charactersArray = Object.values(data) as Character[]
+        // Convert object to array of characters with IDs
+        const charactersArray = Object.entries(data).map(([id, character]) => ({
+          ...(character as Omit<Character, "id">),
+          id,
+        })) as Character[]
         // Sort by English name for better UX
-        charactersArray.sort((a, b) => a.EN.localeCompare(b.EN))
+        charactersArray.sort((a, b) => a.en.localeCompare(b.en))
         setCharacters(charactersArray)
       } catch (error) {
         console.error("Failed to fetch characters:", error)
@@ -84,19 +116,26 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
     }
 
     fetchCharacters()
-  }, [])
+  }, [version])
 
   useEffect(() => {
+    if (!version) return
+
     const fetchWeapons = async () => {
       try {
-        const response = await fetch("https://api.hakush.in/zzz/data/weapon.json")
+        const url = getStaticNanokaURL("weapon.json", version)
+        console.log('Fetching weapons from:', url)
+        const response = await fetch(url)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+        }
         const data = await response.json()
         // Convert object to array of weapons
         const weaponsArray = Object.values(data) as Weapon[]
         // Sort by rank (descending) then by English name
         weaponsArray.sort((a, b) => {
           if (b.rank !== a.rank) return b.rank - a.rank
-          return a.EN.localeCompare(b.EN)
+          return a.en.localeCompare(b.en)
         })
         setWeaponsList(weaponsArray)
       } catch (error) {
@@ -107,12 +146,19 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
     }
 
     fetchWeapons()
-  }, [])
+  }, [version])
 
   useEffect(() => {
+    if (!version) return
+
     const fetchDriveDiscs = async () => {
       try {
-        const response = await fetch("https://api.hakush.in/zzz/data/equipment.json")
+        const url = getStaticNanokaURL("equipment.json", version)
+        console.log('Fetching drive discs from:', url)
+        const response = await fetch(url)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+        }
         const data = await response.json()
         // Convert object to array of drive discs with IDs
         const driveDiscsArray = Object.entries(data).map(([id, disc]) => ({
@@ -120,7 +166,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
           id,
         })) as DriveDisc[]
         // Sort by English name
-        driveDiscsArray.sort((a, b) => a.EN.name.localeCompare(b.EN.name))
+        driveDiscsArray.sort((a, b) => a.en.name.localeCompare(b.en.name))
         setDriveDiscsList(driveDiscsArray)
       } catch (error) {
         console.error("Failed to fetch drive discs:", error)
@@ -130,7 +176,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
     }
 
     fetchDriveDiscs()
-  }, [])
+  }, [version])
 
   const updateField = (path: string, value: unknown) => {
     const keys = path.split(".")
@@ -259,23 +305,23 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                     ) : formData.character.name ? (
                       <span className="flex items-center">
                         {(() => {
-                          const selectedChar = characters.find((char) => char.EN === formData.character.name)
-                          const iconUrl = selectedChar?.icon
-                            ? `https://api.hakush.in/zzz/UI/${selectedChar.icon.replace("IconRole", "IconRoleCrop")}.webp`
+                          const selectedChar = characters.find((char) => char.en === formData.character.name)
+                          const iconUrl = selectedChar?.id
+                            ? getCharacterIconUrl(selectedChar.id)
                             : null
                           return (
                             <>
                               {iconUrl && (
                                 <img
                                   src={iconUrl}
-                                  alt={selectedChar?.EN}
+                                  alt={selectedChar?.en}
                                   className="mr-2 h-6 w-6 rounded-full object-cover"
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none"
                                   }}
                                 />
                               )}
-                              {selectedChar?.EN}
+                              {selectedChar?.en}
                             </>
                           )
                         })()}
@@ -293,29 +339,28 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       <CommandEmpty>No character found.</CommandEmpty>
                       <CommandGroup>
                         {characters.map((char) => {
-                          // Convert IconRole01 to IconRoleCrop01.webp
-                          const iconUrl = char.icon
-                            ? `https://api.hakush.in/zzz/UI/${char.icon.replace("IconRole", "IconRoleCrop")}.webp`
+                          const iconUrl = char.id
+                            ? getCharacterIconUrl(char.id)
                             : null
                           return (
                             <CommandItem
                               key={char.code}
-                              value={char.EN}
+                              value={char.en}
                               onSelect={() => {
-                                updateField("character.name", formData.character.name === char.EN ? "" : char.EN)
+                                updateField("character.name", formData.character.name === char.en ? "" : char.en)
                                 setCharacterComboOpen(false)
                               }}
                             >
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  formData.character.name === char.EN ? "opacity-100" : "opacity-0"
+                                  formData.character.name === char.en ? "opacity-100" : "opacity-0"
                                 )}
                               />
                               {iconUrl && (
                                 <img
                                   src={iconUrl}
-                                  alt={char.EN}
+                                  alt={char.en}
                                   className="mr-2 h-8 w-8 rounded-full object-cover"
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none"
@@ -323,7 +368,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                 />
                               )}
                               <span>
-                                {char.EN} ({char.rank === 3 ? "A" : "S"}-rank)
+                                {char.en} ({char.rank === 3 ? "A" : "S"}-rank)
                               </span>
                             </CommandItem>
                           )
@@ -351,7 +396,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="char-banner">Banner URL (optional)</Label>
-              <p className="text-xs text-muted-foreground">If not provided, will use icon from hakush.in</p>
+              <p className="text-xs text-muted-foreground">If not provided, will use icon from zzz.honeyhunterworld.com</p>
               <Input
                 id="char-banner"
                 value={formData.character.banner || ""}
@@ -393,23 +438,23 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                         ) : weapon.name ? (
                           <span className="flex items-center">
                             {(() => {
-                              const selectedWeapon = weaponsList.find((w) => w.EN === weapon.name)
+                              const selectedWeapon = weaponsList.find((w) => w.en === weapon.name)
                               const iconUrl = selectedWeapon?.icon
-                                ? `https://api.hakush.in/zzz/UI/${selectedWeapon.icon}.webp`
+                                ? getAssetURL(`${selectedWeapon.icon}.webp`)
                                 : null
                               return (
                                 <>
                                   {iconUrl && (
                                     <img
                                       src={iconUrl}
-                                      alt={selectedWeapon?.EN}
+                                      alt={selectedWeapon?.en}
                                       className="mr-2 h-6 w-6 object-contain"
                                       onError={(e) => {
                                         e.currentTarget.style.display = "none"
                                       }}
                                     />
                                   )}
-                                  {selectedWeapon?.EN || weapon.name}
+                                  {selectedWeapon?.en || weapon.name}
                                 </>
                               )
                             })()}
@@ -427,23 +472,23 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                           <CommandEmpty>No W-Engine found.</CommandEmpty>
                           <CommandGroup>
                             {weaponsList.map((w, wIndex) => {
-                              const iconUrl = w.icon ? `https://api.hakush.in/zzz/UI/${w.icon}.webp` : null
+                              const iconUrl = w.icon ? getAssetURL(`${w.icon}.webp`) : null
                               return (
                                 <CommandItem
                                   key={wIndex}
-                                  value={w.EN}
+                                  value={w.en}
                                   onSelect={() => {
-                                    updateArrayItem("weapons", index, "name", weapon.name === w.EN ? "" : w.EN)
+                                    updateArrayItem("weapons", index, "name", weapon.name === w.en ? "" : w.en)
                                     setWeaponComboOpen({ ...weaponComboOpen, [index]: false })
                                   }}
                                 >
                                   <Check
-                                    className={cn("mr-2 h-4 w-4", weapon.name === w.EN ? "opacity-100" : "opacity-0")}
+                                    className={cn("mr-2 h-4 w-4", weapon.name === w.en ? "opacity-100" : "opacity-0")}
                                   />
                                   {iconUrl && (
                                     <img
                                       src={iconUrl}
-                                      alt={w.EN}
+                                      alt={w.en}
                                       className="mr-2 h-8 w-8 object-contain"
                                       onError={(e) => {
                                         e.currentTarget.style.display = "none"
@@ -451,7 +496,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                     />
                                   )}
                                   <span>
-                                    {w.EN} ({w.rank === 2 ? "B" : w.rank === 3 ? "A" : "S"}-rank)
+                                    {w.en} ({w.rank === 2 ? "B" : w.rank === 3 ? "A" : "S"}-rank)
                                   </span>
                                 </CommandItem>
                               )
@@ -481,7 +526,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Icon URL (optional)</Label>
-                  <p className="text-xs text-muted-foreground">If not provided, will use icon from hakush.in</p>
+                  <p className="text-xs text-muted-foreground">If not provided, will use icon from static.nanoka.cc</p>
                   <Input
                     value={weapon.icon || ""}
                     onChange={(e) => updateArrayItem("weapons", index, "icon", e.target.value || null)}
@@ -549,7 +594,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                               ) : disc.name ? (
                                 <span className="flex items-center">
                                   {(() => {
-                                    const selectedDisc = driveDiscsList.find((d) => d.EN.name === disc.name)
+                                    const selectedDisc = driveDiscsList.find((d) => d.en.name === disc.name)
                                     const iconUrl = selectedDisc?.id
                                       ? `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/assets/drive_discs/single/${selectedDisc.id}.webp`
                                       : null
@@ -558,14 +603,14 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                         {iconUrl && (
                                           <img
                                             src={iconUrl}
-                                            alt={selectedDisc?.EN.name}
+                                            alt={selectedDisc?.en.name}
                                             className="mr-2 h-6 w-6 object-contain"
                                             onError={(e) => {
                                               e.currentTarget.style.display = "none"
                                             }}
                                           />
                                         )}
-                                        {selectedDisc?.EN.name || disc.name}
+                                        {selectedDisc?.en.name || disc.name}
                                       </>
                                     )
                                   })()}
@@ -589,13 +634,13 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                     return (
                                       <CommandItem
                                         key={dIndex}
-                                        value={d.EN.name}
+                                        value={d.en.name}
                                         onSelect={() => {
                                           updateArrayItem(
                                             "discs.four_pieces",
                                             index,
                                             "name",
-                                            disc.name === d.EN.name ? "" : d.EN.name
+                                            disc.name === d.en.name ? "" : d.en.name
                                           )
                                           setDiscComboOpen({ ...discComboOpen, [`four-${index}`]: false })
                                         }}
@@ -603,20 +648,20 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                         <Check
                                           className={cn(
                                             "mr-2 h-4 w-4",
-                                            disc.name === d.EN.name ? "opacity-100" : "opacity-0"
+                                            disc.name === d.en.name ? "opacity-100" : "opacity-0"
                                           )}
                                         />
                                         {iconUrl && (
                                           <img
                                             src={iconUrl}
-                                            alt={d.EN.name}
+                                            alt={d.en.name}
                                             className="mr-2 h-8 w-8 object-contain"
                                             onError={(e) => {
                                               e.currentTarget.style.display = "none"
                                             }}
                                           />
                                         )}
-                                        <span>{d.EN.name}</span>
+                                        <span>{d.en.name}</span>
                                       </CommandItem>
                                     )
                                   })}
@@ -637,7 +682,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Icon URL (optional)</Label>
-                        <p className="text-xs text-muted-foreground">If not provided, will use icon from hakush.in</p>
+                        <p className="text-xs text-muted-foreground">If not provided, will use icon from static.nanoka.cc</p>
                         <Input
                           value={disc.icon || ""}
                           onChange={(e) => updateArrayItem("discs.four_pieces", index, "icon", e.target.value || null)}
@@ -690,7 +735,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                   {(() => {
                                     const selectedSets = disc.name.split(" / ")
                                     const selectedDiscs = selectedSets
-                                      .map((name: string) => driveDiscsList.find((d: DriveDisc) => d.EN.name === name))
+                                      .map((name: string) => driveDiscsList.find((d: DriveDisc) => d.en.name === name))
                                       .filter((d: DriveDisc | undefined): d is DriveDisc => d !== undefined)
 
                                     let iconUrl = null
@@ -734,23 +779,23 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                 <CommandGroup>
                                   {driveDiscsList.map((d, dIndex) => {
                                     const selectedSets = disc.name ? disc.name.split(" / ") : []
-                                    const isSelected = selectedSets.includes(d.EN.name)
+                                    const isSelected = selectedSets.includes(d.en.name)
                                     const iconUrl = d.id
                                       ? `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/assets/drive_discs/single/${d.id}.webp`
                                       : null
                                     return (
                                       <CommandItem
                                         key={dIndex}
-                                        value={d.EN.name}
+                                        value={d.en.name}
                                         onSelect={() => {
                                           let newSets = [...selectedSets]
                                           if (isSelected) {
                                             // Remove the set
-                                            newSets = newSets.filter((s) => s !== d.EN.name)
+                                            newSets = newSets.filter((s) => s !== d.en.name)
                                           } else {
                                             // Add the set (max 2)
                                             if (newSets.length < 2) {
-                                              newSets.push(d.EN.name)
+                                              newSets.push(d.en.name)
                                             }
                                           }
                                           updateArrayItem("discs.two_pieces", index, "name", newSets.join(" / "))
@@ -762,14 +807,14 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                         {iconUrl && (
                                           <img
                                             src={iconUrl}
-                                            alt={d.EN.name}
+                                            alt={d.en.name}
                                             className="mr-2 h-8 w-8 object-contain"
                                             onError={(e) => {
                                               e.currentTarget.style.display = "none"
                                             }}
                                           />
                                         )}
-                                        <span>{d.EN.name}</span>
+                                        <span>{d.en.name}</span>
                                       </CommandItem>
                                     )
                                   })}
@@ -793,7 +838,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Icon URL (optional)</Label>
-                        <p className="text-xs text-muted-foreground">If not provided, will use icon from hakush.in</p>
+                        <p className="text-xs text-muted-foreground">If not provided, will use icon from static.nanoka.cc</p>
                         <Input
                           value={disc.icon || ""}
                           onChange={(e) => updateArrayItem("discs.two_pieces", index, "icon", e.target.value || null)}
@@ -1240,19 +1285,16 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                     ) : char.name ? (
                                       <span className="flex items-center flex-wrap gap-1 truncate">
                                         {char.name.split(" / ").map((name: string, idx: number) => {
-                                          const selectedChar = characters.find((c) => c.EN === name.trim())
-                                          const iconUrl = selectedChar?.icon
-                                            ? `https://api.hakush.in/zzz/UI/${selectedChar.icon.replace(
-                                              "IconRole",
-                                              "IconRoleCrop"
-                                            )}.webp`
+                                          const selectedChar = characters.find((c) => c.en === name.trim())
+                                          const iconUrl = selectedChar?.id
+                                            ? getCharacterIconUrl(selectedChar.id)
                                             : null
                                           return (
                                             <span key={idx} className="flex items-center">
                                               {iconUrl && (
                                                 <img
                                                   src={iconUrl}
-                                                  alt={selectedChar?.EN}
+                                                  alt={selectedChar?.en}
                                                   className="mr-1 h-5 w-5 rounded-full object-cover"
                                                   onError={(e) => {
                                                     e.currentTarget.style.display = "none"
@@ -1278,22 +1320,19 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                       <CommandEmpty>No character found.</CommandEmpty>
                                       <CommandGroup>
                                         {characters.map((character) => {
-                                          const iconUrl = character.icon
-                                            ? `https://api.hakush.in/zzz/UI/${character.icon.replace(
-                                              "IconRole",
-                                              "IconRoleCrop"
-                                            )}.webp`
+                                          const iconUrl = character.id
+                                            ? getCharacterIconUrl(character.id)
                                             : null
                                           const selectedNames = (char.name || "")
                                             .split(" / ")
                                             .map((n: string) => n.trim())
                                             .filter((n: string) => n)
-                                          const isSelected = selectedNames.includes(character.EN)
+                                          const isSelected = selectedNames.includes(character.en)
                                           const canSelect = selectedNames.length < 3 || isSelected
                                           return (
                                             <CommandItem
                                               key={character.code}
-                                              value={character.EN}
+                                              value={character.en}
                                               disabled={!canSelect}
                                               onSelect={() => {
                                                 if (!canSelect && !isSelected) return
@@ -1302,10 +1341,10 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                                 let newNames = [...selectedNames]
                                                 if (isSelected) {
                                                   // Remove character
-                                                  newNames = newNames.filter((n) => n !== character.EN)
+                                                  newNames = newNames.filter((n) => n !== character.en)
                                                 } else {
                                                   // Add character
-                                                  newNames.push(character.EN)
+                                                  newNames.push(character.en)
                                                 }
                                                 newData.team.teams[index].characters[charIndex].name =
                                                   newNames.join(" / ")
@@ -1321,7 +1360,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                               {iconUrl && (
                                                 <img
                                                   src={iconUrl}
-                                                  alt={character.EN}
+                                                  alt={character.en}
                                                   className="mr-2 h-8 w-8 rounded-full object-cover"
                                                   onError={(e) => {
                                                     e.currentTarget.style.display = "none"
@@ -1329,7 +1368,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                                 />
                                               )}
                                               <span className={!canSelect && !isSelected ? "opacity-50" : ""}>
-                                                {character.EN} ({character.rank === 3 ? "A" : "S"}-rank)
+                                                {character.en} ({character.rank === 3 ? "A" : "S"}-rank)
                                               </span>
                                             </CommandItem>
                                           )
