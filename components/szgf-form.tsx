@@ -68,8 +68,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
   const [discComboOpen, setDiscComboOpen] = useState<{ [key: string]: boolean }>({})
   const [teamCharComboOpen, setTeamCharComboOpen] = useState<{ [key: string]: boolean }>({})
 
-  const getCharacterIconUrl = (characterId: string) =>
-    `https://zzz.honeyhunterworld.com/img/character/${characterId}-char_icon.webp`
+  const getCharacterIconUrl = (characterIcon: string) =>
+    `https://static.nanoka.cc/assets/zzz/${characterIcon.replace("IconRole", "IconRoleSelect")}.webp`
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -306,8 +306,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       <span className="flex items-center">
                         {(() => {
                           const selectedChar = characters.find((char) => char.en === formData.character.name)
-                          const iconUrl = selectedChar?.id
-                            ? getCharacterIconUrl(selectedChar.id)
+                          const iconUrl = selectedChar?.icon
+                            ? getCharacterIconUrl(selectedChar.icon)
                             : null
                           return (
                             <>
@@ -339,8 +339,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       <CommandEmpty>No character found.</CommandEmpty>
                       <CommandGroup>
                         {characters.map((char) => {
-                          const iconUrl = char.id
-                            ? getCharacterIconUrl(char.id)
+                          const iconUrl = char.icon
+                            ? getCharacterIconUrl(char.icon)
                             : null
                           return (
                             <CommandItem
@@ -396,7 +396,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="char-banner">Banner URL (optional)</Label>
-              <p className="text-xs text-muted-foreground">If not provided, will use icon from zzz.honeyhunterworld.com</p>
+              <p className="text-xs text-muted-foreground">If not provided, will use icon from static.nanoka.cc</p>
               <Input
                 id="char-banner"
                 value={formData.character.banner || ""}
@@ -1286,8 +1286,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                       <span className="flex items-center flex-wrap gap-1 truncate">
                                         {char.name.split(" / ").map((name: string, idx: number) => {
                                           const selectedChar = characters.find((c) => c.en === name.trim())
-                                          const iconUrl = selectedChar?.id
-                                            ? getCharacterIconUrl(selectedChar.id)
+                                          const iconUrl = selectedChar?.icon
+                                            ? getCharacterIconUrl(selectedChar.icon)
                                             : null
                                           return (
                                             <span key={idx} className="flex items-center">
@@ -1320,8 +1320,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                       <CommandEmpty>No character found.</CommandEmpty>
                                       <CommandGroup>
                                         {characters.map((character) => {
-                                          const iconUrl = character.id
-                                            ? getCharacterIconUrl(character.id)
+                                          const iconUrl = character.icon
+                                            ? getCharacterIconUrl(character.icon)
                                             : null
                                           const selectedNames = (char.name || "")
                                             .split(" / ")
