@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SZGF Generator</title>
+    <meta name="description" content="Easily generate SZGF-compliant guides by filling forms." />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+            rel="stylesheet"
+        />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icon-light-32x32.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/icon-dark-32x32.png" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="/apple-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <script>
+        (function () {
+            const theme =
+                localStorage.getItem("theme") ||
+                (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+            document.documentElement.classList.toggle("dark", theme === "dark")
+        })()
+    </script>
+  <script type="module" crossorigin src="/assets/index-DcOcxgmL.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CD1ms6WD.css">
+</head>
+
+<body>
+    <div id="root"></div>
+</body>
+
+</html>

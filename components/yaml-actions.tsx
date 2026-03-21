@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,11 +13,12 @@ import { Download, Copy, Upload, FileUp, Trash2, MessageCircle, Github } from "l
 import { useToast } from "@/hooks/use-toast"
 import * as yaml from "js-yaml"
 import { useRef, useState, useEffect } from "react"
-import Ajv from "ajv"
+import Ajv, { type ValidateFunction } from "ajv"
+import { defaultFormData, type FormData } from "@/lib/form-data"
 
 interface YAMLActionsProps {
-  formData: any
-  setFormData: (data: any) => void
+  formData: FormData
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>
   isMobile?: boolean
   onValidationChange?: (errors: string[]) => void
 }
@@ -27,8 +26,9 @@ interface YAMLActionsProps {
 export function YAMLActions({ formData, setFormData, isMobile = false, onValidationChange }: YAMLActionsProps) {
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const validatorRef = useRef<ValidateFunction | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
-  const [schema, setSchema] = useState<any>(null)
+  const [schema, setSchema] = useState<unknown>(null)
   const [pasteDialogOpen, setPasteDialogOpen] = useState(false)
   const [pasteContent, setPasteContent] = useState("")
   const [nextStepsDialogOpen, setNextStepsDialogOpen] = useState(false)
@@ -42,7 +42,11 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
   useEffect(() => {
     fetch("https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/schema.json")
       .then((res) => res.json())
-      .then((data) => setSchema(data))
+      .then((data) => {
+        setSchema(data)
+        const ajv = new Ajv({ allErrors: true, strict: false })
+        validatorRef.current = ajv.compile(data)
+      })
       .catch((err) => console.error("Failed to fetch schema:", err))
   }, [])
 
@@ -64,10 +68,7 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
     if (!formData.character?.rarity) errors.push("Character rarity is required")
 
     // JSON Schema validation if available
-    if (schema) {
-      const ajv = new Ajv({ allErrors: true, strict: false })
-      const validate = ajv.compile(schema)
-
+    if (validatorRef.current) {
       // Clean data same way as YAML generation
       const cleanData = JSON.parse(
         JSON.stringify(formData, (_key, value) => {
@@ -78,9 +79,9 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
         }),
       )
 
-      const valid = validate(cleanData)
-      if (!valid && validate.errors) {
-        validate.errors.forEach((error) => {
+      const valid = validatorRef.current(cleanData)
+      if (!valid && validatorRef.current.errors) {
+        validatorRef.current.errors.forEach((error) => {
           const path = error.instancePath || "root"
           const message = error.message || "validation error"
           errors.push(`${path}: ${message}`)
@@ -186,7 +187,7 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
     reader.onload = (event) => {
       try {
         const content = event.target?.result as string
-        const parsed = yaml.load(content) as any
+        const parsed = yaml.load(content) as FormData
         setFormData(parsed)
         toast({
           title: "Imported",
@@ -210,7 +211,7 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
 
   const handleConfirmPaste = () => {
     try {
-      const parsed = yaml.load(pasteContent) as any
+      const parsed = yaml.load(pasteContent) as FormData
       setFormData(parsed)
       toast({
         title: "Imported",
@@ -229,24 +230,7 @@ export function YAMLActions({ formData, setFormData, isMobile = false, onValidat
 
   const handleClearForm = () => {
     if (confirm("Are you sure you want to clear the entire form? This action cannot be undone.")) {
-      setFormData({
-        author: "",
-        last_updated: new Date().toISOString().split("T")[0],
-        character: {
-          name: "",
-          rarity: 5,
-          banner: null,
-        },
-        description: "",
-        weapons: [],
-        discs: null,
-        stat: null,
-        skill_priority: null,
-        skills: [],
-        mindscapes: [],
-        team: null,
-        rotation: null,
-      })
+      setFormData({ ...defaultFormData })
       toast({
         title: "Cleared",
         description: "Form has been cleared successfully",

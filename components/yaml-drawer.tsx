@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
@@ -7,10 +5,12 @@ import { YAMLPreview } from "@/components/yaml-preview"
 import { YAMLActions } from "@/components/yaml-actions"
 import { Toaster } from "@/components/ui/toaster"
 import { FileCode2 } from "lucide-react"
+import type { Dispatch, SetStateAction } from "react"
+import type { FormData } from "@/lib/form-data"
 
 interface YAMLDrawerProps {
-  formData: any
-  setFormData: (data: any) => void
+  formData: FormData
+  setFormData: Dispatch<SetStateAction<FormData>>
 }
 
 export function YAMLDrawer({ formData, setFormData }: YAMLDrawerProps) {

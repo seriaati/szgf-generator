@@ -1,11 +1,10 @@
-"use client"
-
 import * as yaml from "js-yaml"
 import { useEffect, useState } from "react"
 import { AlertCircle } from "lucide-react"
+import type { FormData } from "@/lib/form-data"
 
 interface YAMLPreviewProps {
-  formData: any
+  formData: FormData
   showHeader?: boolean
   validationErrors?: string[]
 }
@@ -31,7 +30,7 @@ export function YAMLPreview({ formData, showHeader = true, validationErrors = []
         quotingType: '"',
       })
       setYamlContent(generated)
-    } catch (error) {
+    } catch {
       setYamlContent("# Error generating YAML")
     }
   }, [formData])

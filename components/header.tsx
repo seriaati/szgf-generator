@@ -1,14 +1,14 @@
-"use client"
-
 import { YAMLActions } from "@/components/yaml-actions"
 import { Toaster } from "@/components/ui/toaster"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ExternalLink } from "lucide-react"
+import type { FormData } from "@/lib/form-data"
+import type { Dispatch, SetStateAction } from "react"
 
 interface HeaderProps {
-  formData: any
-  setFormData: (data: any) => void
+  formData: FormData
+  setFormData: Dispatch<SetStateAction<FormData>>
   isMobile?: boolean
   onValidationChange?: (errors: string[]) => void
 }

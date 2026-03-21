@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
@@ -13,6 +11,18 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
+import type {
+  DiscItem,
+  ExtraSection,
+  FormData,
+  MindscapeItem,
+  SkillItem,
+  StatMainItem,
+  TeamCharacter,
+  TeamItem,
+  WeaponItem,
+} from "@/lib/form-data"
+import type { Dispatch, SetStateAction } from "react"
 
 interface Character {
   code: string
@@ -40,8 +50,8 @@ interface DriveDisc {
 }
 
 interface SZGFFormProps {
-  formData: any
-  setFormData: (data: any) => void
+  formData: FormData
+  setFormData: Dispatch<SetStateAction<FormData>>
 }
 
 export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
@@ -122,75 +132,74 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
     fetchDriveDiscs()
   }, [])
 
-  const updateField = (path: string, value: any) => {
+  const updateField = (path: string, value: unknown) => {
     const keys = path.split(".")
-    const newData = { ...formData }
-    let current: any = newData
+    const newData = structuredClone(formData)
+    let current: Record<string, unknown> = newData as unknown as Record<string, unknown>
 
     for (let i = 0; i < keys.length - 1; i++) {
-      current[keys[i]] = { ...current[keys[i]] }
-      current = current[keys[i]]
+      current = current[keys[i]] as Record<string, unknown>
     }
 
     current[keys[keys.length - 1]] = value
     setFormData(newData)
   }
 
-  const addArrayItem = (path: string, template: any) => {
+  const addArrayItem = (path: string, template: unknown) => {
     const keys = path.split(".")
-    const newData = { ...formData }
-    let current: any = newData
+    const newData = structuredClone(formData)
+    let current: Record<string, unknown> = newData as unknown as Record<string, unknown>
 
     for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]]
+      current = current[keys[i]] as Record<string, unknown>
     }
 
-    const array = current[keys[keys.length - 1]] || []
+    const array = (current[keys[keys.length - 1]] as unknown[]) || []
     current[keys[keys.length - 1]] = [...array, template]
     setFormData(newData)
   }
 
   const removeArrayItem = (path: string, index: number) => {
     const keys = path.split(".")
-    const newData = { ...formData }
-    let current: any = newData
+    const newData = structuredClone(formData)
+    let current: Record<string, unknown> = newData as unknown as Record<string, unknown>
 
     for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]]
+      current = current[keys[i]] as Record<string, unknown>
     }
 
-    const array = [...current[keys[keys.length - 1]]]
+    const array = [...((current[keys[keys.length - 1]] as unknown[]) || [])]
     array.splice(index, 1)
     current[keys[keys.length - 1]] = array
     setFormData(newData)
   }
 
-  const updateArrayItem = (path: string, index: number, field: string, value: any) => {
+  const updateArrayItem = (path: string, index: number, field: string, value: unknown) => {
     const keys = path.split(".")
-    const newData = { ...formData }
-    let current: any = newData
+    const newData = structuredClone(formData)
+    let current: Record<string, unknown> = newData as unknown as Record<string, unknown>
 
     for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]]
+      current = current[keys[i]] as Record<string, unknown>
     }
 
-    const array = [...current[keys[keys.length - 1]]]
-    array[index] = { ...array[index], [field]: value }
+    const array = [...((current[keys[keys.length - 1]] as Record<string, unknown>[]) || [])]
+    array[index] = field ? { ...array[index], [field]: value } : (value as Record<string, unknown>)
     current[keys[keys.length - 1]] = array
     setFormData(newData)
   }
 
-  const weapons = formData.weapons || []
-  const skills = formData.skills || []
-  const mindscapes = formData.mindscapes || []
-  const discsFourPieces = formData.discs?.four_pieces || []
-  const discsTwoPieces = formData.discs?.two_pieces || []
-  const discsExtraSections = formData.discs?.extra_sections || []
-  const mainStats = formData.stat?.main_stats || []
-  const statExtraSections = formData.stat?.extra_sections || []
+  const weapons: WeaponItem[] = formData.weapons || []
+  const skills: SkillItem[] = formData.skills || []
+  const mindscapes: MindscapeItem[] = formData.mindscapes || []
+  const discsFourPieces: DiscItem[] = formData.discs?.four_pieces || []
+  const discsTwoPieces: DiscItem[] = formData.discs?.two_pieces || []
+  const discsExtraSections: ExtraSection[] = formData.discs?.extra_sections || []
+  const mainStats: StatMainItem[] = formData.stat?.main_stats || []
+  const statExtraSections: ExtraSection[] = formData.stat?.extra_sections || []
   const skillPriorities = formData.skill_priority?.priorities || []
-  const teams = formData.team?.teams || []
-  const teamExtraSections = formData.team?.extra_sections || []
+  const teams: TeamItem[] = formData.team?.teams || []
+  const teamExtraSections: ExtraSection[] = formData.team?.extra_sections || []
 
   return (
     <div className="p-6 space-y-6">
@@ -357,7 +366,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
         <AccordionItem value="weapons">
           <AccordionTrigger className="text-lg font-semibold">W-Engines ({weapons.length})</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
-            {weapons.map((weapon: any, index: number) => (
+            {weapons.map((weapon: WeaponItem, index: number) => (
               <Card key={index} className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">W-Engine {index + 1}</h4>
@@ -513,7 +522,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">Four-Piece Sets ({discsFourPieces.length})</h4>
                   </div>
-                  {discsFourPieces.map((disc: any, index: number) => (
+                  {discsFourPieces.map((disc: DiscItem, index: number) => (
                     <Card key={index} className="p-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <h5 className="text-sm font-medium">4-Piece Set {index + 1}</h5>
@@ -652,7 +661,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">Two-Piece Sets ({discsTwoPieces.length})</h4>
                   </div>
-                  {discsTwoPieces.map((disc: any, index: number) => (
+                  {discsTwoPieces.map((disc: DiscItem, index: number) => (
                     <Card key={index} className="p-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <h5 className="text-sm font-medium">2-Piece Set {index + 1}</h5>
@@ -806,7 +815,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
 
                 <div className="space-y-4">
                   <h4 className="font-medium">Extra Sections ({discsExtraSections.length})</h4>
-                  {discsExtraSections.map((section: any, index: number) => (
+                  {discsExtraSections.map((section: ExtraSection, index: number) => (
                     <Card key={index} className="p-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <h5 className="text-sm font-medium">Section {index + 1}</h5>
@@ -877,7 +886,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
               <>
                 <div className="space-y-4">
                   <h4 className="font-medium">Main Stats ({mainStats.length})</h4>
-                  {mainStats.map((stat: any, index: number) => (
+                  {mainStats.map((stat: StatMainItem, index: number) => (
                     <Card key={index} className="p-4 space-y-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-2 flex-1">
@@ -944,7 +953,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
 
                 <div className="space-y-4">
                   <h4 className="font-medium">Extra Sections ({statExtraSections.length})</h4>
-                  {statExtraSections.map((section: any, index: number) => (
+                  {statExtraSections.map((section: ExtraSection, index: number) => (
                     <Card key={index} className="p-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <h5 className="text-sm font-medium">Section {index + 1}</h5>
@@ -1047,9 +1056,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                   const newPriority = checked
                                     ? [...priority, skillType]
                                     : priority.filter((s) => s !== skillType)
-                                  updateArrayItem("skill_priority.priorities", index, "", newPriority)
-                                  // Update the entire item instead of a field
-                                  const newData = { ...formData }
+                                  const newData = structuredClone(formData)
+                                  if (!newData.skill_priority) return
                                   newData.skill_priority.priorities[index] = newPriority
                                   setFormData(newData)
                                 }}
@@ -1094,7 +1102,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
         <AccordionItem value="skills">
           <AccordionTrigger className="text-lg font-semibold">Skills ({skills.length})</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
-            {skills.map((skill: any, index: number) => (
+            {skills.map((skill: SkillItem, index: number) => (
               <Card key={index} className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">Skill {index + 1}</h4>
@@ -1166,7 +1174,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
               <>
                 <div className="space-y-4">
                   <h4 className="font-medium">Team Compositions ({teams.length})</h4>
-                  {teams.map((team: any, index: number) => (
+                  {teams.map((team: TeamItem, index: number) => (
                     <Card key={index} className="p-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <h5 className="text-sm font-medium">Team {index + 1}</h5>
@@ -1193,7 +1201,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                       </div>
                       <div className="space-y-2">
                         <Label>Characters ({team.characters?.length || 0})</Label>
-                        {(team.characters || []).map((char: any, charIndex: number) => (
+                        {(team.characters || []).map((char: TeamCharacter, charIndex: number) => (
                           <Card key={charIndex} className="p-3 space-y-2">
                             <div className="flex items-center justify-between">
                               <Label className="text-sm">Position {charIndex + 1}</Label>
@@ -1201,7 +1209,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                  const newData = { ...formData }
+                                  const newData = structuredClone(formData)
+                                  if (!newData.team) return
                                   newData.team.teams[index].characters.splice(charIndex, 1)
                                   setFormData(newData)
                                 }}
@@ -1234,9 +1243,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                           const selectedChar = characters.find((c) => c.EN === name.trim())
                                           const iconUrl = selectedChar?.icon
                                             ? `https://api.hakush.in/zzz/UI/${selectedChar.icon.replace(
-                                                "IconRole",
-                                                "IconRoleCrop"
-                                              )}.webp`
+                                              "IconRole",
+                                              "IconRoleCrop"
+                                            )}.webp`
                                             : null
                                           return (
                                             <span key={idx} className="flex items-center">
@@ -1271,9 +1280,9 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                         {characters.map((character) => {
                                           const iconUrl = character.icon
                                             ? `https://api.hakush.in/zzz/UI/${character.icon.replace(
-                                                "IconRole",
-                                                "IconRoleCrop"
-                                              )}.webp`
+                                              "IconRole",
+                                              "IconRoleCrop"
+                                            )}.webp`
                                             : null
                                           const selectedNames = (char.name || "")
                                             .split(" / ")
@@ -1288,7 +1297,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                                               disabled={!canSelect}
                                               onSelect={() => {
                                                 if (!canSelect && !isSelected) return
-                                                const newData = { ...formData }
+                                                const newData = structuredClone(formData)
+                                                if (!newData.team) return
                                                 let newNames = [...selectedNames]
                                                 if (isSelected) {
                                                   // Remove character
@@ -1338,7 +1348,8 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
                             size="sm"
                             className="w-full bg-transparent"
                             onClick={() => {
-                              const newData = { ...formData }
+                              const newData = structuredClone(formData)
+                              if (!newData.team) return
                               if (!newData.team.teams[index].characters) {
                                 newData.team.teams[index].characters = []
                               }
@@ -1366,7 +1377,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
 
                 <div className="space-y-4">
                   <h4 className="font-medium">Extra Sections ({teamExtraSections.length})</h4>
-                  {teamExtraSections.map((section: any, index: number) => (
+                  {teamExtraSections.map((section: ExtraSection, index: number) => (
                     <Card key={index} className="p-4 space-y-4">
                       <div className="flex items-center justify-between">
                         <h5 className="text-sm font-medium">Section {index + 1}</h5>
@@ -1465,7 +1476,7 @@ export function SZGFForm({ formData, setFormData }: SZGFFormProps) {
         <AccordionItem value="mindscapes">
           <AccordionTrigger className="text-lg font-semibold">Mindscape Cinemas ({mindscapes.length})</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
-            {mindscapes.map((mindscape: any, index: number) => (
+            {mindscapes.map((mindscape: MindscapeItem, index: number) => (
               <Card key={index} className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium">Mindscape {index + 1}</h4>
