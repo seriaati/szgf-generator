@@ -4,31 +4,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**SZGF Generator** (<https://szgf.seria.moe>) - A web-based form builder that generates SZGF-compliant YAML guides for Zenless Zone Zero characters. Built with Next.js 16, React 19, and TypeScript.
+**SZGF Generator** (<https://szgf.seria.moe>) - A web-based form builder that generates SZGF-compliant YAML guides for Zenless Zone Zero characters. A client-side single-page app built with React 19, Vite 7, and TypeScript.
 
 ## Development Commands
 
 ```bash
 # Development server (hot reload)
-npm run dev
+pnpm dev
 
-# Production build
-npm run build
+# Type-check (tsc -b) and production build to dist/
+pnpm build
 
-# Start production server (requires build first)
-npm start
-
-# Run linter
-npm run lint
+# Serve the production build locally
+pnpm preview
 ```
 
 ## Architecture
 
+### Entry Points
+
+- [index.html](index.html) - HTML shell; an inline script applies the `dark` class from `localStorage`/`prefers-color-scheme` before React mounts
+- [src/main.tsx](src/main.tsx) - Mounts `<App />`
+- [src/App.tsx](src/App.tsx) - Holds all state and lays out the page
+
 ### State Management Pattern
 
-**Single Source of Truth**: All form state lives in [app/page.tsx:9-26](app/page.tsx#L9-L26) as a single `formData` object managed by `useState`.
+**Single Source of Truth**: All form state lives in [src/App.tsx](src/App.tsx) as a single `formData` object managed by `useState`. Its type (`FormData`) and initial value (`defaultFormData`) are defined in [lib/form-data.ts](lib/form-data.ts).
 
-**State Updates**: The form uses **immutable updates with path-based field access**:
+**State Updates**: [components/szgf-form.tsx](components/szgf-form.tsx) defines path-based helpers that `structuredClone` the current data and replace it:
 
 - `updateField(path, value)` - Updates nested fields using dot notation (e.g., `"character.name"`)
 - `addArrayItem(path, template)` - Appends to arrays with a template object
@@ -38,76 +41,70 @@ npm run lint
 State flows **down only** through prop drilling (no Context API or state management library):
 
 ```
-page.tsx (state holder)
-    ├─> Header (export/import/clear controls)
-    ├─> SZGFForm (form inputs)
-    └─> YAMLPreview (real-time output)
+App.tsx (state holder)
+    ├─> Header        (ThemeToggle + YAMLActions: export/import/clear/validate)
+    ├─> SZGFForm      (form inputs)
+    ├─> YAMLPreview   (desktop: live output in right pane)
+    └─> YAMLDrawer    (mobile: sheet containing YAMLActions + YAMLPreview)
 ```
+
+Layout switches on `useIsMobile()` (<768px).
 
 ### YAML Generation
 
-The YAML generation logic in [components/yaml-actions.tsx:32-50](components/yaml-actions.tsx#L32-L50) performs two key steps:
+`generateYAML()` in [components/yaml-actions.tsx](components/yaml-actions.tsx) performs two steps:
 
-1. **Cleaning**: Removes `null`, empty strings, and empty arrays using `JSON.stringify` replacer
-   - `null` → `undefined` → omitted from YAML output
-   - Empty strings `""` → `undefined` → omitted
-   - Empty arrays `[]` → `undefined` → omitted
-2. **Serialization**: Uses `js-yaml` library with these options:
-   - `lineWidth: -1` - No line wrapping
-   - `noRefs: true` - No YAML references
-   - `quotingType: '"'` - Use double quotes
-   - Adds `# yaml-language-server: $schema=../../schema.json` comment at top
+1. **Cleaning**: Removes `null`, empty strings, and empty arrays using a `JSON.stringify` replacer
+2. **Serialization**: `js-yaml` with `lineWidth: -1`, `noRefs: true`, `quotingType: '"'`, prefixed with `# yaml-language-server: $schema=../../schema.json`
+
+[components/yaml-preview.tsx](components/yaml-preview.tsx) duplicates the same cleaning and dump options for the live preview. Keep the two in sync when changing output.
 
 ### Form Structure
 
-[components/szgf-form.tsx](components/szgf-form.tsx) is the **main form component (940 lines)** organized as:
+[components/szgf-form.tsx](components/szgf-form.tsx) is the main form component (~1,570 lines):
 
-- **Accordion-based UI** with 9 collapsible sections
-- **Required sections**: Basic Info, Character, Weapons, Skills, Mindscapes
-- **Optional sections**: Discs, Stats, Skill Priority, Team, Rotation
-- **Array management**: Add/Remove buttons for dynamic lists (weapons, skills, mindscapes, teams, etc.)
-
-Path-based updates enable deep nested modifications without complex logic:
-
-```typescript
-updateField("character.name", "Nicole")
-updateArrayItem("weapons", 0, "description", "Best weapon for Nicole")
-```
+- **Accordion-based UI** with 10 sections: Basic Information, Character, W-Engines, Discs, Stats, Skill Priority, Skills, Teams, Rotation, Mindscape Cinemas
+- **Game data**: On mount, fetches the current ZZZ version and the character, weapon, and drive disc lists from `static.nanoka.cc` (helpers in [lib/utils.ts](lib/utils.ts)) to populate pickers and icons
+- **Rich text**: Long text fields use [components/rich-text-editor.tsx](components/rich-text-editor.tsx), a textarea with markdown and skill-tag insertion buttons
 
 ### Component Structure
 
 ```
-app/
-  ├─ layout.tsx          - Root layout with metadata and theme provider
-  ├─ page.tsx           - Main page with state management and layout
+index.html              - HTML shell, fonts, favicons, theme bootstrap script
+src/
+  ├─ main.tsx           - React root
+  ├─ App.tsx            - State holder and layout
   └─ globals.css        - Tailwind imports + CSS variables for theming
 
 components/
-  ├─ header.tsx         - Export (download/copy), import (file/paste), clear
-  ├─ szgf-form.tsx      - Main form with 9 accordion sections
-  ├─ yaml-preview.tsx   - Live YAML preview with useEffect watching formData
-  ├─ theme-provider.tsx - next-themes wrapper for dark mode
-  └─ ui/               - 60+ shadcn/ui components (Radix UI + Tailwind)
+  ├─ header.tsx         - Title bar with ThemeToggle and YAMLActions
+  ├─ yaml-actions.tsx   - Download/copy, import (file/paste), clear, schema validation
+  ├─ yaml-preview.tsx   - Live YAML preview
+  ├─ yaml-drawer.tsx    - Mobile bottom sheet with actions + preview
+  ├─ szgf-form.tsx      - Main form
+  ├─ rich-text-editor.tsx
+  ├─ theme-toggle.tsx   - Toggles `dark` class on <html>, persists to localStorage
+  └─ ui/                - shadcn/ui components (Radix UI + Tailwind), only the ones in use
 
 hooks/
-  ├─ use-toast.ts       - Custom toast notification system (reducer pattern)
+  ├─ use-toast.ts       - Toast notification system (reducer pattern)
   └─ use-mobile.ts      - Mobile breakpoint detection (<768px)
 
 lib/
-  └─ utils.ts          - cn() function (clsx + tailwind-merge)
+  ├─ form-data.ts       - FormData types and defaultFormData
+  └─ utils.ts           - cn(), getZZZVersion(), nanoka.cc URL helpers
 ```
 
 ## Key Technologies
 
-- **Next.js 16** - App Router, client-side only (no API routes)
-- **React 19** - Latest features, all interactive components use `"use client"`
-- **TypeScript** - Strict mode enabled in [tsconfig.json](tsconfig.json)
-- **Tailwind CSS v4** - Latest with PostCSS plugin, custom purple gaming theme
+- **Vite 7** with `@vitejs/plugin-react-swc` - config in [vite.config.ts](vite.config.ts)
+- **React 19**
+- **TypeScript** - Strict mode; `pnpm build` type-checks before bundling
+- **Tailwind CSS v4** - via `@tailwindcss/postcss` ([postcss.config.mjs](postcss.config.mjs)), purple theme
 - **js-yaml 4.1.1** - YAML parsing and generation
-- **ajv 8.17.1** - JSON Schema validator for real-time SZGF validation
-- **Radix UI** - Accessible component primitives (30+ packages)
-- **shadcn/ui** - Pre-built components using Radix + Tailwind
-- **Lucide React** - Icon library
+- **ajv 8** - JSON Schema validation
+- **Radix UI** / **shadcn/ui** - UI primitives and components
+- **Lucide React** - Icons
 
 ## SZGF Format
 
@@ -135,7 +132,7 @@ The **Standardized ZZZ Guide Format** is a YAML structure with these fields:
 
 Optional sections follow a strict pattern per SZGF Pydantic schema requirements:
 
-1. **Initialization**: Optional sections start as `null` in formData
+1. **Initialization**: Optional sections start as `null` in `defaultFormData`
 2. **Enabling**: When user adds the section, it's initialized with a valid template object containing required nested fields
 3. **Disabling**: When user removes the section, it's set back to `null`
 4. **YAML Output**: During generation, `null` values are converted to `undefined` and omitted from the output
@@ -146,70 +143,41 @@ Optional sections follow a strict pattern per SZGF Pydantic schema requirements:
 - `stat` requires `main_stats`, `sub_stats`, and `baseline_stats`
 - `skill_priority` requires `priorities` array
 
-This is why the current `null` → `undefined` → omit pattern is correct.
+This is why the `null` → `undefined` → omit pattern is correct.
 
 ## YAML Validation
 
-The generator includes **real-time JSON Schema validation** against the official SZGF schema:
+Validation lives in [components/yaml-actions.tsx](components/yaml-actions.tsx):
 
-### Features
-
-- **Live Validation**: Automatic validation on every form change (when basic fields are filled)
-- **Schema-Based**: Uses `ajv` library with the official SZGF JSON schema from GitHub
-- **Visual Feedback**: Error count displayed in header with console details
-- **Manual Validation**: "Validate" button for explicit validation checks
-- **Export Protection**: Download and Copy actions blocked when validation fails
-
-### Implementation Details
-
-**Schema Loading** ([components/yaml-actions.tsx:24-29](components/yaml-actions.tsx#L24-L29)):
-
-- Fetches schema from `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/schema.json` on mount
-- Stores in component state for validation
-
-**Validation Process** ([components/yaml-actions.tsx:38-68](components/yaml-actions.tsx#L38-L68)):
-
-1. Basic validation for required fields (author, last_updated, description, character)
-2. JSON Schema validation using `ajv` with cleaned data (same cleaning as YAML generation)
-3. Returns `null` if valid, or array of error strings if invalid
-4. Updates `validationErrors` state for UI display
-
-**Live Validation** ([components/yaml-actions.tsx:32-36](components/yaml-actions.tsx#L32-L36)):
-
-- `useEffect` hook watches `formData` and `schema` changes
-- Runs validation automatically when data changes (if basic fields are valid)
-- Updates error state in real-time
-
-**UI Feedback**:
-
-- Desktop: Small error banner below action buttons showing error count
-- Mobile: Expanded error list showing first 3 errors with overflow indicator
-- Console: Full error details logged for debugging
+- **Schema loading**: On mount, fetches `https://raw.githubusercontent.com/seriaati/szgf/refs/heads/main/schema.json` and compiles it with `ajv` (`allErrors: true, strict: false`)
+- **`validateFormData()`**: Checks basic required fields (author, last_updated, description, character name/rarity), then runs the compiled schema against the cleaned data. Returns `null` if valid, or an array of error strings
+- **Live validation**: A `useEffect` re-validates whenever `formData` or the schema changes, once the basic fields are filled
+- **Error reporting**: Errors are passed up via `onValidationChange` to `App`, which hands them to `YAMLPreview` for display
+- **Export protection**: Download and Copy are blocked when validation fails
 
 ## Important Notes
 
-- **No backend** - Pure client-side React app with no API routes or database
-- **No persistence** - Form data exists only in memory (state)
-- **Build config** - `next.config.mjs` has `ignoreBuildErrors: true` to allow TypeScript errors during builds
-- **Path aliases** - `@/*` maps to project root in [tsconfig.json:26-28](tsconfig.json#L26-L28)
-- **Theming** - CSS variables in [app/globals.css](app/globals.css) use oklch color space with purple primary color
-- **Immutable updates** - Always spread objects/arrays when updating nested state
+- **No backend** - Pure client-side app; builds to static files in `dist/`
+- **External data** - Schema from GitHub, game data and icons from `static.nanoka.cc`
+- **No persistence** - Form data exists only in memory; only the theme choice is saved to `localStorage`
+- **Path aliases** - `@/*` maps to the project root (both [tsconfig.json](tsconfig.json) and [vite.config.ts](vite.config.ts))
+- **Theming** - CSS variables in [src/globals.css](src/globals.css) use oklch with a purple primary color; dark mode is the `dark` class on `<html>`
 
 ## Common Patterns
 
 ### Adding a New Form Field
 
-1. Update the `formData` initial state in [app/page.tsx](app/page.tsx)
+1. Add the field to `FormData` and `defaultFormData` in [lib/form-data.ts](lib/form-data.ts)
 2. Add UI in [components/szgf-form.tsx](components/szgf-form.tsx) using `updateField()`, `addArrayItem()`, etc.
-3. The YAML preview will automatically update (no changes needed)
+3. The YAML preview updates automatically
 
 ### Modifying YAML Output
 
-Edit the `generateYAML()` function in [components/yaml-actions.tsx](components/yaml-actions.tsx) to adjust cleaning logic or `js-yaml` options.
+Edit `generateYAML()` in [components/yaml-actions.tsx](components/yaml-actions.tsx) and the matching logic in [components/yaml-preview.tsx](components/yaml-preview.tsx).
 
 ### Adding New Optional Sections
 
-1. Initialize as `null` in formData ([app/page.tsx](app/page.tsx))
-2. Add "Add Section" button in form that sets it to a valid template object with required fields
-3. Add "Remove Section" button that sets it back to `null` (will be stripped from YAML output)
-4. Template objects must include all required nested fields per Pydantic schema (e.g., `{ four_pieces: [], two_pieces: [], extra_sections: [] }` for discs)
+1. Initialize as `null` in `defaultFormData` ([lib/form-data.ts](lib/form-data.ts))
+2. Add an "Add Section" button that sets it to a valid template object with required fields
+3. Add a "Remove Section" button that sets it back to `null` (stripped from YAML output)
+4. Template objects must include all required nested fields per the Pydantic schema (e.g., `{ four_pieces: [], two_pieces: [], extra_sections: [] }` for discs)
